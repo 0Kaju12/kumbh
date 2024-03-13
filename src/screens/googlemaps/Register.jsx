@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet } from 'react-native';
+import {} from "@react-navigation/native-stack"
 
 const RegisterScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
@@ -11,7 +12,7 @@ const RegisterScreen = ({ navigation }) => {
     console.log('Username:', username);
     console.log('Password:', password);
     // Navigate to GoogleMapsScreen after successful login
-    // navigation.navigate('GoogleMaps');
+    navigation.navigate('Login');
   };
 
   return (
