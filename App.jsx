@@ -13,9 +13,9 @@ const Stack = createNativeStackNavigator(); // Corrected variable name
 const App = ()=>{
     return (
         <NavigationContainer>
-            <Stack.Navigator initialRouteName="Register">
-                <Stack.Screen name="Register" component={RegisterScreen} />
+            <Stack.Navigator initialRouteName="Login">
                 <Stack.Screen name="Login" component={LoginScreen} />
+                <Stack.Screen name="Register" component={RegisterScreen} />
                 <Stack.Screen name="GoogleMaps" component={GoogleMapsScreen} />
             </Stack.Navigator>
         </NavigationContainer>
