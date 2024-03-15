@@ -41,7 +41,9 @@ const styles = StyleSheet.create({
   },
 });
 
-function GoogleMapsScreen() {
+function GoogleMapsScreen({ route }) {
+  const { userId } = route.params;
+  // console.log(userId+'sumit');
   const [permission, setPermission] = useState(false);
   const [marker, setMarker] = useState({
     latitude: 25.42972,
@@ -50,6 +52,7 @@ function GoogleMapsScreen() {
     description: "All good",
     color: 'blue', // Default color is blue
   });
+
 
   const toggleStatus = (color) => {
     setMarker({ ...marker, color });
@@ -96,7 +99,8 @@ function GoogleMapsScreen() {
     );
   };
 
-  const _saveLocation = async (lat, long) => {
+
+  const _saveLocation = async (lat, long ) => {
     try {
       const response = await fetch('http://10.0.2.2:3000/saveLocation', {
         method: 'POST',
@@ -104,9 +108,9 @@ function GoogleMapsScreen() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: "65f35676834dd4fcda7a4bb8",
+          userId: userId,
           lat: lat.toString(),
-          long: long.toString()
+          long: long.toString(),
         }),
       });
       const data = await response.json();
@@ -121,19 +125,21 @@ function GoogleMapsScreen() {
     }
   };
 
-  const _updateLocation = async (lat, long) => {
+  const _updateLocation = async (lat, long ) => {
     try {
-      const response = await fetch('http://10.0.2.2:3000/updateLocation', {
+      const response = await fetch('http://10.0.2.2:3000/saveLocation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: "65f35676834dd4fcda7a4bb8",
+          userId: userId,
           lat: lat.toString(),
-          long: long.toString()
+          long: long.toString(),
         }),
       });
+      console.log(userId);
+      console.log("update");
       const data = await response.json();
       console.log(data);
       if (data.message === 'Location updated successfully') {
@@ -162,7 +168,9 @@ function GoogleMapsScreen() {
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
           setPermission(true);
           await _getCurrentLocation();
-          _saveLocation(marker.latitude, marker.longitude)
+
+          _saveLocation(marker.latitude,marker.longitude,"normal")
+          console.log(userId)
           console.log('You can use the app');
         } else {
           console.log('Location permission denied');
@@ -185,7 +193,7 @@ function GoogleMapsScreen() {
           latitude: location.latitude,
           longitude: location.longitude
         });
-        _updateLocation(location.latitude, location.longitude);
+        _updateLocation(location.latitude, location.longitude, "normal");
         // Save location when page is rendered
 
       })
