@@ -31,7 +31,7 @@ const RegisterScreen = ({navigation}) => {
       console.log(data);
       if (data.message === 'User registered successfully') {
         // If login is successful, navigate to GoogleMapsScreen
-        navigation.navigate('GoogleMaps');
+        navigation.navigate('Login');
       } else {
         // If login fails, handle error (e.g., display error message)
         console.error('Register failed');
