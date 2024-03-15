@@ -42,6 +42,7 @@ const styles = StyleSheet.create({
 });
 
 function GoogleMapsScreen({ route }) {
+  const [a, setA]= useState('');
   const { userId } = route.params;
   // console.log(userId+'sumit');
   const [permission, setPermission] = useState(false);
@@ -50,14 +51,13 @@ function GoogleMapsScreen({ route }) {
     longitude: 81.771385,
     name: "Kush",
     description: "All good",
-    color: 'blue', // Default color is blue
+    color: 'Blue', // Default color is blue
   });
 
 
-  const toggleStatus = (color) => {
-    setMarker({ ...marker, color });
-  };
+  
 
+  
   const getStatusButtonStyle = (color) => {
     switch (color) {
       case 'blue':
@@ -77,6 +77,11 @@ function GoogleMapsScreen({ route }) {
     }
   };
 
+  const toggleStatus = (color) => {
+    console.log('clicked');
+    setA(color); // Set the color state
+  };
+  
   const renderStatusButtons = () => {
     return (
       <View style={styles.statusContainer}>
@@ -98,9 +103,9 @@ function GoogleMapsScreen({ route }) {
       </View>
     );
   };
-
-
-  const _saveLocation = async (lat, long ) => {
+  
+  
+  const _saveLocation = async (lat, long) => {
     try {
       const response = await fetch('http://10.0.2.2:3000/saveLocation', {
         method: 'POST',
@@ -124,24 +129,33 @@ function GoogleMapsScreen({ route }) {
       console.error('Error:', error);
     }
   };
-
-  const _updateLocation = async (lat, long ) => {
+  
+  const _updateLocation = async (lat, long) => {
     try {
+      const requestData = {
+        userId: userId,
+        lat: lat.toString(),
+        long: long.toString(),
+      };
+  
+      if (a) { // Check if 'a' has a value
+        requestData.color = a; // Add color to the request data if 'a' is not empty
+      }
+  
       const response = await fetch('http://10.0.2.2:3000/saveLocation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          userId: userId,
-          lat: lat.toString(),
-          long: long.toString(),
-        }),
+        body: JSON.stringify(requestData),
       });
+  
       console.log(userId);
       console.log("update");
+  
       const data = await response.json();
       console.log(data);
+  
       if (data.message === 'Location updated successfully') {
         console.log('Location Updated successfully');
       } else {
@@ -151,6 +165,7 @@ function GoogleMapsScreen({ route }) {
       console.error('Error:', error);
     }
   };
+  
 
   const _getLocationPermission = async () => {
     if (Platform.OS === "android") {
@@ -169,7 +184,7 @@ function GoogleMapsScreen({ route }) {
           setPermission(true);
           await _getCurrentLocation();
 
-          _saveLocation(marker.latitude,marker.longitude,"normal")
+          _saveLocation(marker.latitude,marker.longitude,"")
           console.log(userId)
           console.log('You can use the app');
         } else {
@@ -180,28 +195,30 @@ function GoogleMapsScreen({ route }) {
       }
     }
   };
-
+  
+  
   const _getCurrentLocation = () => {
     GetLocation.getCurrentPosition({
       enableHighAccuracy: true,
-      timeout: 30000,
+      timeout: 5000,
     })
       .then(location => {
         console.log("My current location =>", location);
         setMarker({
           ...marker,
           latitude: location.latitude,
-          longitude: location.longitude
+          longitude: location.longitude,
         });
-        _updateLocation(location.latitude, location.longitude, "normal");
-        // Save location when page is rendered
-
+        _updateLocation(location.latitude, location.longitude); // Pass the updated color
       })
       .catch(error => {
         const { code, message } = error;
         console.warn(code, message);
       });
   };
+  
+  
+  
 
   useEffect(() => {
     _getLocationPermission();
@@ -210,11 +227,10 @@ function GoogleMapsScreen({ route }) {
   useEffect(() => {
     const intervalId = setInterval(() => {
       _getCurrentLocation();
-    }, 30000);
-
+    }, 10000);
+  
     return () => clearInterval(intervalId);
-  }, []);
-
+  }, [a]); // Add 'a' as a dependency
 
   return (
     <View style={styles.container}>
