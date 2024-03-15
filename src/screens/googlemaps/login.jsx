@@ -24,7 +24,8 @@ const LoginScreen = ({ navigation }) => {
       console.log(data)
       if (data.message === 'Login successful') {
         // If login is successful, navigate to GoogleMapsScreen
-        navigation.navigate('GoogleMaps');
+        console.log("this"+data.id)
+        navigation.navigate('GoogleMaps', { userId: data?.id });
       } else {
         // If login fails, handle error (e.g., display error message)
         console.error('Login failed');
