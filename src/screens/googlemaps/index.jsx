@@ -5,6 +5,9 @@ import Green_Marker from '../../assets/Green_Marker.png';
 import Blue_Marker from '../../assets/Blue_Marker.png';
 import Red_Marker from '../../assets/Red_Marker.png';
 import GetLocation from 'react-native-get-location';
+import { useFocusEffect } from '@react-navigation/native'; 
+import MapViewDirections from 'react-native-maps-directions';
+
 
 const styles = StyleSheet.create({
   container: {
@@ -41,7 +44,8 @@ const styles = StyleSheet.create({
   },
 });
 
-function GoogleMapsScreen({ route }) {
+function GoogleMapsScreen({ route ,  navigation  }) {
+  const [a, setA]= useState('');
   const { userId } = route.params;
   // console.log(userId+'sumit');
   const [permission, setPermission] = useState(false);
@@ -50,14 +54,14 @@ function GoogleMapsScreen({ route }) {
     longitude: 81.771385,
     name: "Kush",
     description: "All good",
-    color: 'blue', // Default color is blue
+    color: 'Blue', // Default color is blue
   });
 
 
-  const toggleStatus = (color) => {
-    setMarker({ ...marker, color });
-  };
 
+  
+
+  
   const getStatusButtonStyle = (color) => {
     switch (color) {
       case 'blue':
@@ -77,6 +81,11 @@ function GoogleMapsScreen({ route }) {
     }
   };
 
+  const toggleStatus = (color) => {
+    console.log('clicked');
+    setA(color); // Set the color state
+  };
+  
   const renderStatusButtons = () => {
     return (
       <View style={styles.statusContainer}>
@@ -98,9 +107,9 @@ function GoogleMapsScreen({ route }) {
       </View>
     );
   };
-
-
-  const _saveLocation = async (lat, long ) => {
+  
+  
+  const _saveLocation = async (lat, long) => {
     try {
       const response = await fetch('http://10.0.2.2:3000/saveLocation', {
         method: 'POST',
@@ -125,23 +134,56 @@ function GoogleMapsScreen({ route }) {
     }
   };
 
-  const _updateLocation = async (lat, long ) => {
+  const _getLocation = async () => {
     try {
-      const response = await fetch('http://10.0.2.2:3000/saveLocation', {
+      const response = await fetch('http://10.0.2.2:3000/getLocation', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           userId: userId,
-          lat: lat.toString(),
-          long: long.toString(),
         }),
       });
+      const data = await response.json();
+      console.log('getlocation')
+      console.log(data);
+      if(data.color==='purple' || data.color==='yellow'){
+        console.log('harsh')
+        navigation.navigate('Map', { userId: userId, dlat: data?.lat, dlong: data?.long });
+      }
+      console.log('hello brdr')
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+  
+  const _updateLocation = async (lat, long) => {
+    try {
+      const requestData = {
+        userId: userId,
+        lat: lat.toString(),
+        long: long.toString(),
+      };
+  
+      if (a) { // Check if 'a' has a value
+        requestData.color = a; // Add color to the request data if 'a' is not empty
+      }
+  
+      const response = await fetch('http://10.0.2.2:3000/saveLocation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestData),
+      });
+  
       console.log(userId);
       console.log("update");
+  
       const data = await response.json();
       console.log(data);
+  
       if (data.message === 'Location updated successfully') {
         console.log('Location Updated successfully');
       } else {
@@ -151,6 +193,7 @@ function GoogleMapsScreen({ route }) {
       console.error('Error:', error);
     }
   };
+  
 
   const _getLocationPermission = async () => {
     if (Platform.OS === "android") {
@@ -169,7 +212,7 @@ function GoogleMapsScreen({ route }) {
           setPermission(true);
           await _getCurrentLocation();
 
-          _saveLocation(marker.latitude,marker.longitude,"normal")
+          _saveLocation(marker.latitude,marker.longitude,"")
           console.log(userId)
           console.log('You can use the app');
         } else {
@@ -180,47 +223,51 @@ function GoogleMapsScreen({ route }) {
       }
     }
   };
-
+  
+  
   const _getCurrentLocation = () => {
     GetLocation.getCurrentPosition({
       enableHighAccuracy: true,
-      timeout: 30000,
+      timeout: 5000,
     })
       .then(location => {
         console.log("My current location =>", location);
         setMarker({
           ...marker,
           latitude: location.latitude,
-          longitude: location.longitude
+          longitude: location.longitude,
         });
-        _updateLocation(location.latitude, location.longitude, "normal");
-        // Save location when page is rendered
-
+        _updateLocation(location.latitude, location.longitude); // Pass the updated color
       })
       .catch(error => {
         const { code, message } = error;
         console.warn(code, message);
       });
   };
+  
+  
+  
 
   useEffect(() => {
     _getLocationPermission();
   }, []);
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      _getCurrentLocation();
-    }, 30000);
-
-    return () => clearInterval(intervalId);
-  }, []);
-
+  useFocusEffect(
+    React.useCallback(() => {
+      const intervalId = setInterval(() => {
+        _getCurrentLocation();
+        _getLocation();
+      }, 5000);
+      
+      return () => clearInterval(intervalId); // Cleanup function to clear interval when screen loses focus
+    }, [a])
+  );
 
   return (
     <View style={styles.container}>
       {renderStatusButtons()}
       {permission ? (
-        <MapView
+        <MapView 
           provider={PROVIDER_GOOGLE}
           style={styles.map}
           region={{
@@ -248,6 +295,8 @@ function GoogleMapsScreen({ route }) {
             strokeColor='black'
             fillColor='#EBF5FB'
           />
+          
+          
         </MapView>
       ) : (
         <Text>Please allow location permission to continue...</Text>
