@@ -5,6 +5,9 @@ import Green_Marker from '../../assets/Green_Marker.png';
 import Blue_Marker from '../../assets/Blue_Marker.png';
 import Red_Marker from '../../assets/Red_Marker.png';
 import GetLocation from 'react-native-get-location';
+import { useFocusEffect } from '@react-navigation/native'; 
+import MapViewDirections from 'react-native-maps-directions';
+
 
 const styles = StyleSheet.create({
   container: {
@@ -41,7 +44,7 @@ const styles = StyleSheet.create({
   },
 });
 
-function GoogleMapsScreen({ route }) {
+function GoogleMapsScreen({ route ,  navigation  }) {
   const [a, setA]= useState('');
   const { userId } = route.params;
   // console.log(userId+'sumit');
@@ -53,6 +56,7 @@ function GoogleMapsScreen({ route }) {
     description: "All good",
     color: 'Blue', // Default color is blue
   });
+
 
 
   
@@ -125,6 +129,30 @@ function GoogleMapsScreen({ route }) {
       } else {
         console.error('Failed to save location');
       }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
+  const _getLocation = async () => {
+    try {
+      const response = await fetch('http://10.0.2.2:3000/getLocation', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          userId: userId,
+        }),
+      });
+      const data = await response.json();
+      console.log('getlocation')
+      console.log(data);
+      if(data.color==='purple' || data.color==='yellow'){
+        console.log('harsh')
+        navigation.navigate('Map', { userId: userId, dlat: data?.lat, dlong: data?.long });
+      }
+      console.log('hello brdr')
     } catch (error) {
       console.error('Error:', error);
     }
@@ -224,19 +252,22 @@ function GoogleMapsScreen({ route }) {
     _getLocationPermission();
   }, []);
 
-  useEffect(() => {
-    const intervalId = setInterval(() => {
-      _getCurrentLocation();
-    }, 10000);
-  
-    return () => clearInterval(intervalId);
-  }, [a]); // Add 'a' as a dependency
+  useFocusEffect(
+    React.useCallback(() => {
+      const intervalId = setInterval(() => {
+        _getCurrentLocation();
+        _getLocation();
+      }, 5000);
+      
+      return () => clearInterval(intervalId); // Cleanup function to clear interval when screen loses focus
+    }, [a])
+  );
 
   return (
     <View style={styles.container}>
       {renderStatusButtons()}
       {permission ? (
-        <MapView
+        <MapView 
           provider={PROVIDER_GOOGLE}
           style={styles.map}
           region={{
@@ -264,6 +295,8 @@ function GoogleMapsScreen({ route }) {
             strokeColor='black'
             fillColor='#EBF5FB'
           />
+          
+          
         </MapView>
       ) : (
         <Text>Please allow location permission to continue...</Text>

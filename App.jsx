@@ -4,6 +4,7 @@ import { Text } from "react-native";
 import GoogleMapsScreen from "./src/screens/googlemaps/index";
 import LoginScreen from "./src/screens/googlemaps/login";
 import RegisterScreen from "./src/screens/googlemaps/Register";
+import Map from "./src/screens/googlemaps/map"
 //NAVIGATION
 import {NavigationContainer} from "@react-navigation/native"
 import {createNativeStackNavigator} from "@react-navigation/native-stack"
@@ -17,6 +18,7 @@ const App = ()=>{
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
                 <Stack.Screen name="GoogleMaps" component={GoogleMapsScreen} />
+                <Stack.Screen name="Map" component={Map} />
             </Stack.Navigator>
         </NavigationContainer>
     )
